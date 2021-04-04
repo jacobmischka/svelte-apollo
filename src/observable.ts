@@ -111,11 +111,39 @@ export function observableQueryToReadable<
 	TVariables = unknown
 >(
 	query: ObservableQuery<TData, TVariables>,
-	initialValue?: Result<TData>
+	initialValue: Result<TData> = {
+		loading: true,
+		data: undefined,
+		error: undefined,
+	}
 ): ReadableQuery<TData> {
-	const store = observableToReadable(query, initialValue) as ReadableQuery<
-		TData
-	>;
+	// This is mostly duplicated from observableToReadable, but with the
+	// addition of the loading prop provided by ObservableQuery
+	const store = readable<Result<TData>>(initialValue, (set) => {
+		const skipDuplicate = initialValue?.data !== undefined;
+		let skipped = false;
+
+		const subscription = query.subscribe(
+			(result) => {
+				if (skipDuplicate && !skipped) {
+					skipped = true;
+					return;
+				}
+
+				if (result.errors) {
+					const error = new ApolloError({ graphQLErrors: result.errors });
+					set({ loading: false, data: undefined, error });
+				} else if (result.loading) {
+					set({ loading: true, data: undefined, error: undefined });
+				} else {
+					set({ loading: false, data: result.data, error: undefined });
+				}
+			},
+			(error) => set({ loading: false, data: undefined, error })
+		);
+
+		return () => subscription.unsubscribe();
+	}) as ReadableQuery<TData>;
 
 	for (const extension of extensions) {
 		store[extension] = query[extension].bind(query) as any;
