@@ -1,6 +1,6 @@
 {
 	"name": "@jacobmischka/svelte-apollo",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"author": "Jacob Mischka <jacob@mischka.me>",
 	"license": "MIT",
 	"repository": "https://github.com/timhall/svelte-apollo.git",
