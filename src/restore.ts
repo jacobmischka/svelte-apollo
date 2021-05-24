@@ -16,10 +16,9 @@ export const restoring: Restoring<unknown> =
 
 export function restore<TData = unknown, TVariables = OperationVariables>(
 	query: DocumentNode,
-	options: Omit<DataProxy.WriteQueryOptions<TData, TVariables>, "query">
+	options: Omit<DataProxy.WriteQueryOptions<TData, TVariables>, "query">,
+	client: ApolloClient<any> = getClient()
 ): void {
-	const client = getClient();
-
 	restoring.add(client);
 	afterHydrate(() => restoring.delete(client));
 

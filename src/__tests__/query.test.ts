@@ -1,9 +1,9 @@
-import { gql } from "@apollo/client/core";
+import { ApolloClient, gql } from "@apollo/client/core";
 import { get } from "svelte/store";
 import { getClient, query, setClient } from "..";
 import { Result } from "../observable";
 import { restoring } from "../restore";
-import { getMock, MockClient, mockObservableQuery } from "../__fixtures__/mock";
+import { mockClient, getMock, MockClient, mockObservableQuery } from "../__fixtures__/mock";
 import { read } from "../__fixtures__/read";
 
 jest.mock("../context");
@@ -30,6 +30,22 @@ it("should call watchQuery with options", async () => {
 	expect(values[1].data).toEqual({});
 
 	const client = getClient();
+	const [[options]] = getMock(client.watchQuery).calls;
+
+	expect(options.query).toBeDefined();
+	expect(options.variables).toEqual({ id: 1 });
+});
+
+
+it("should support passing in client", async () => {
+	const client = mockClient({ mutate: () => Promise.resolve(42) } as MockClient) as ApolloClient<any>;
+
+	const store = query(MESSAGE_BY_ID, { variables: { id: 1 } }, client);
+
+	const values = await read<Result<any>>(store);
+	expect(values[0].loading).toBe(true);
+	expect(values[1].data).toEqual({});
+
 	const [[options]] = getMock(client.watchQuery).calls;
 
 	expect(options.query).toBeDefined();
